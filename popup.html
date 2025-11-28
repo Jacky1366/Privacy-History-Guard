@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History Keyword Cleaner</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            width: 350px;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            transition: all 0.3s ease;
+        }
+
+        /* Dark Mode (Default) */
+        body.dark-mode {
+            background: #1a1a1a;
+            color: white;
+        }
+
+        body.dark-mode .container {
+            background: #2d2d2d;
+            border: 1px solid #404040;
+        }
+
+        body.dark-mode input[type="text"] {
+            background: #3a3a3a;
+            color: #ffffff;
+            border: 1px solid #505050;
+        }
+
+        body.dark-mode input[type="text"]:focus {
+            background: #424242;
+            border-color: #666;
+        }
+
+        body.dark-mode .clear-input {
+            color: #999;
+            background: #505050;
+        }
+
+        body.dark-mode .clear-input:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        body.dark-mode .btn-secondary {
+            background: #3a3a3a;
+            color: white;
+            border: 1px solid #505050;
+        }
+
+        body.dark-mode .btn-secondary:hover {
+            background: #505050;
+        }
+
+        body.dark-mode .modal-overlay {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        body.dark-mode .modal-content {
+            background: #2d2d2d;
+            border: 1px solid #404040;
+        }
+
+        body.dark-mode .keyword-tag {
+            background: #3a3a3a;
+            border: 1px solid #505050;
+        }
+
+        body.dark-mode .preview-item:hover {
+            background: #505050;
+        }
+
+        body.dark-mode .modal-close {
+            background: #3a3a3a;
+        }
+
+        body.dark-mode .modal-close:hover {
+            background: #ff6b6b;
+        }
+
+        body.dark-mode .modal-header {
+            border-bottom: 1px solid #404040;
+        }
+
+        body.dark-mode .theme-toggle {
+            background: #3a3a3a;
+        }
+
+        body.dark-mode .theme-toggle:hover {
+            background: #505050;
+        }
+
+        /* Light Mode */
+        body.light-mode {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+        }
+
+        body.light-mode .container {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode input[type="text"] {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+
+        body.light-mode input[type="text"]:focus {
+            background: white;
+            border-color: #667eea;
+        }
+
+        body.light-mode .clear-input {
+            color: #666;
+            background: #e8e8e8;
+        }
+
+        body.light-mode .clear-input:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        body.light-mode .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 1px solid #667eea;
+        }
+
+        body.light-mode .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        body.light-mode .status.success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid rgba(76, 175, 80, 0.5);
+            color: #2e7d32;
+        }
+
+        body.light-mode .status.error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid rgba(244, 67, 54, 0.5);
+            color: #c62828;
+        }
+
+        body.light-mode .modal-overlay {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        body.light-mode .modal-content {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+        }
+
+        body.light-mode .keyword-tag {
+            background: rgba(102, 126, 234, 0.15);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            color: #333;
+        }
+
+        body.light-mode .preview-item:hover {
+            background: rgba(102, 126, 234, 0.25);
+        }
+
+        body.light-mode .modal-close {
+            background: rgba(0, 0, 0, 0.1);
+            color: #333;
+        }
+
+        body.light-mode .modal-close:hover {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        body.light-mode .modal-header {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        body.light-mode .help-text {
+            color: #666;
+        }
+
+        /* Base Styles */
+        .container {
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.2);
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .theme-toggle:active {
+            transform: scale(0.95);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .input-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 40px 12px 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .clear-input {
+            position: absolute;
+            right: 8px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 1;
+            font-weight: bold;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            user-select: none;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .clear-input:hover {
+            transform: scale(1.15);
+            box-shadow: 0 2px 6px rgba(255, 107, 107, 0.4);
+        }
+
+        .clear-input:active {
+            transform: scale(0.95);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #ff5252;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 500;
+            min-height: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .keyword-list {
+            margin-top: 15px;
+        }
+
+        /* Modal overlay */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Modal content */
+        .modal-content {
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 500px;
+            max-height: 80vh;
+            width: 90%;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+            position: relative;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+        }
+
+        .modal-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .modal-close {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .modal-close:hover {
+            transform: scale(1.1);
+        }
+
+        .modal-body {
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .keyword-tag {
+            display: inline-block;
+            padding: 4px 8px;
+            margin: 2px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .preview-link {
+            text-decoration: none;
+            color: inherit;
+            display: inline-block;
+        }
+
+        .preview-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .preview-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .preview-item:active {
+            transform: translateY(0);
+        }
+
+        .help-text {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 5px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+
+<body class="dark-mode">
+    <div class="container">
+        <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+
+        <div class="header">
+            <h1>🗑️ History Cleaner</h1>
+        </div>
+
+        <div class="input-group">
+            <label for="keyword">Enter Keywords (comma-separated):</label>
+            <div class="input-container">
+                <input type="text" id="keyword" placeholder="e.g., facebook, youtube, reddit">
+                <span class="clear-input" id="clearKeyword" title="Clear input">×</span>
+            </div>
+            <div class="help-text">Enter keywords to delete from your browsing history. Separate multiple keywords with
+                commas.</div>
+        </div>
+
+        <div class="button-group">
+            <button id="cleanHistory" class="btn-primary">Clean History</button>
+            <button id="previewResults" class="btn-secondary">Preview</button>
+        </div>
+
+        <div id="status" class="status"></div>
+
+        <div id="keywordList" class="keyword-list"></div>
+    </div>
+
+    <!-- Modal for preview results -->
+    <div id="previewModal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">Preview Results</h2>
+                <button class="modal-close" id="closeModal">×</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Preview results will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>
