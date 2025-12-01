@@ -1,3 +1,8 @@
+
+
+We contribute to this project equally!!!!!
+
+
 # Privacy History Guard
 
 > 🚧 **Project Status**: In Development 
@@ -19,13 +24,7 @@ This project addresses a common privacy concern: accidentally revealing personal
 - [ ] Simple popup interface for blacklist management
 - [ ] On/off toggle for extension
 
-### Version B (Advanced Features - Stretch Goals)
-- [ ] Professional entry replacement system
-- [ ] Category-based blacklist organization
-- [ ] Context-aware filtering
-- [ ] Usage statistics and analytics
-- [ ] Keyboard shortcuts
-- [ ] Export/import settings
+
 
 ## 🛠️ Tech Stack
 
@@ -121,7 +120,6 @@ This project is created for educational purposes as part of KPU's INFO3150 cours
 
 - KPU Kwantlen Polytechnic University
 - INFO3150 - Software Engineering (Fall 2025)
-- Instructor: Dr. Kongwen (Frank) Zhang
 
 ---
 
