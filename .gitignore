@@ -69,3 +69,4 @@ credentials.json
 # Chrome Extension Development
 *.pem
 key.pem
+.DS_Store

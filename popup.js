@@ -1,19 +1,3 @@
-/**
- * POPUP.JS - Frontend Controller
- * Connects Terry's UI to the backend (background.js)
- * 
- * This file:
- * 1. Loads saved keywords on startup
- * 2. Handles all button clicks
- * 3. Sends messages to background.js
- * 4. Updates the UI based on responses
- */
-
-//=============================================================================
-// SECTION 1: GET ALL UI ELEMENTS
-//=============================================================================
-// Think of this as "finding all the controls" we need to work with
-
 // Input fields
 const keywordInput = document.getElementById('keyword');
 const clearKeywordBtn = document.getElementById('clearKeyword');
@@ -32,10 +16,11 @@ const previewModal = document.getElementById('previewModal');
 const modalBody = document.getElementById('modalBody');
 const closeModalBtn = document.getElementById('closeModal');
 
-//=============================================================================
-// SECTION 2: INITIALIZE ON PAGE LOAD
-//=============================================================================
-// When the popup opens, load the saved keywords from backend
+// Auto-delete elements
+const autoDeleteToggleBtn = document.getElementById('autoDeleteToggle');
+const autoDeleteStatusDiv = document.getElementById('autoDeleteStatus');
+const autoDeleteProgressDiv = document.getElementById('autoDeleteProgress');
+
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('Popup opened - initializing...');
@@ -47,16 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
     loadTheme();
 });
 
-//=============================================================================
-// SECTION 3: LOAD KEYWORDS FROM BACKEND
-//=============================================================================
-/**
- * Loads saved keywords from backend and displays them
- */
+
 function loadKeywords() {
     console.log('Loading keywords from backend...');
 
     // Send message to background.js
+    // https://developer.chrome.com/docs/extensions/reference/api/runtime#method-sendMessage
     chrome.runtime.sendMessage(
         { action: 'getKeywords' },
         (response) => {
@@ -71,9 +52,6 @@ function loadKeywords() {
     );
 }
 
-//=============================================================================
-// SECTION 4: DISPLAY KEYWORDS IN UI
-//=============================================================================
 /**
  * Display the keyword list with remove buttons
  * @param {string[]} keywords - Array of keywords to display
@@ -108,9 +86,6 @@ function displayKeywords(keywords) {
     });
 }
 
-//=============================================================================
-// SECTION 5: ADD KEYWORDS
-//=============================================================================
 /**
  * Add keywords from the input field
  */
@@ -141,6 +116,7 @@ function addKeywords() {
     let totalToAdd = keywords.length;
 
     keywords.forEach(keyword => {
+        // https://developer.chrome.com/docs/extensions/reference/api/runtime#method-sendMessage
         chrome.runtime.sendMessage(
             {
                 action: 'addKeyword',
@@ -176,6 +152,7 @@ function addKeywords() {
 function removeKeyword(keyword) {
     console.log('Removing keyword:', keyword);
 
+    // https://developer.chrome.com/docs/extensions/reference/api/runtime#method-sendMessage
     chrome.runtime.sendMessage(
         {
             action: 'removeKeyword',
@@ -194,9 +171,6 @@ function removeKeyword(keyword) {
     );
 }
 
-//=============================================================================
-// SECTION 7: CLEAN HISTORY (Main Function!)
-//=============================================================================
 /**
  * Clean history using all saved keywords
  */
@@ -209,6 +183,7 @@ function cleanHistory() {
     cleanHistoryBtn.textContent = 'Cleaning...';
 
     // Send cleanHistory message to backend
+    // https://developer.chrome.com/docs/extensions/reference/api/runtime#method-sendMessage
     chrome.runtime.sendMessage(
         { action: 'cleanHistory' },
         (response) => {
@@ -233,9 +208,6 @@ function cleanHistory() {
     );
 }
 
-//=============================================================================
-// SECTION 8: PREVIEW RESULTS
-//=============================================================================
 /**
  * Preview what would be deleted (without actually deleting)
  */
@@ -247,6 +219,7 @@ function previewResults() {
     previewModal.classList.add('active');
 
     // Get keywords first
+    // https://developer.chrome.com/docs/extensions/reference/api/runtime#method-sendMessage
     chrome.runtime.sendMessage(
         { action: 'getKeywords' },
         (response) => {
@@ -262,11 +235,12 @@ function previewResults() {
             let searchesCompleted = 0;
 
             keywords.forEach(keyword => {
+                // https://developer.chrome.com/docs/extensions/reference/api/runtime#method-sendMessage
                 chrome.runtime.sendMessage(
                     {
                         action: 'searchHistory',
                         text: keyword,
-                        maxResults: 10 // Limit results per keyword
+                        maxResults: 1000 // Show up to 1000 results per keyword in preview
                     },
                     (searchResponse) => {
                         searchesCompleted++;
@@ -329,9 +303,6 @@ function displayPreviewResults(results, keywords) {
     modalBody.innerHTML = html;
 }
 
-//=============================================================================
-// SECTION 9: SHOW STATUS MESSAGES
-//=============================================================================
 /**
  * Show a status message to the user
  * @param {string} message - The message to show
@@ -348,9 +319,6 @@ function showStatus(message, type = 'info') {
     }, 5000);
 }
 
-//=============================================================================
-// SECTION 10: THEME TOGGLE
-//=============================================================================
 /**
  * Toggle between dark and light mode
  */
@@ -388,9 +356,6 @@ function loadTheme() {
     }
 }
 
-//=============================================================================
-// SECTION 11: UTILITY FUNCTIONS
-//=============================================================================
 /**
  * Escape HTML to prevent XSS
  * @param {string} text - Text to escape
@@ -409,9 +374,6 @@ function closeModal() {
     previewModal.classList.remove('active');
 }
 
-//=============================================================================
-// SECTION 12: EVENT LISTENERS
-//=============================================================================
 // Connect all buttons to their functions
 
 // Clean History button
@@ -453,7 +415,189 @@ keywordInput.addEventListener('blur', () => {
     }
 });
 
-//=============================================================================
-// DONE! 🎉
-//=============================================================================
+/**
+ * Toggle auto-delete on/off
+ */
+function toggleAutoDelete() {
+    console.log('Toggling auto-delete...');
+
+    // First check current status
+    // https://developer.chrome.com/docs/extensions/reference/api/runtime#method-sendMessage
+    chrome.runtime.sendMessage(
+        { action: 'getAutoDeleteStatus' },
+        (response) => {
+            if (response.success) {
+                if (response.isRunning) {
+                    // Currently running, so stop it
+                    stopAutoDelete();
+                } else {
+                    // Not running, so start it
+                    startAutoDelete();
+                }
+            }
+        }
+    );
+}
+
+/**
+ * Start auto-deletion
+ */
+function startAutoDelete() {
+    console.log('Starting auto-delete...');
+
+    // https://developer.chrome.com/docs/extensions/reference/api/runtime#method-sendMessage
+    chrome.runtime.sendMessage(
+        { action: 'startAutoDelete' },
+        (response) => {
+            if (response.success) {
+                console.log('Auto-delete started!');
+                updateAutoDeleteUI(true, response.progress);
+                showStatus('Auto-delete started! Running in background...', 'success');
+
+                // Start polling for status updates
+                startStatusPolling();
+            } else {
+                console.error('Failed to start auto-delete:', response.message);
+                showStatus(`Error: ${response.message}`, 'error');
+            }
+        }
+    );
+}
+
+/**
+ * Stop auto-deletion
+ */
+function stopAutoDelete() {
+    console.log('Stopping auto-delete...');
+
+    // https://developer.chrome.com/docs/extensions/reference/api/runtime#method-sendMessage
+    chrome.runtime.sendMessage(
+        { action: 'stopAutoDelete' },
+        (response) => {
+            if (response.success) {
+                console.log('Auto-delete stopped!');
+                updateAutoDeleteUI(false, response.progress);
+                showStatus(`Auto-delete stopped. Deleted ${response.progress.totalDeleted} entries.`, 'info');
+
+                // Stop polling
+                stopStatusPolling();
+            } else {
+                console.error('Failed to stop auto-delete:', response.message);
+                showStatus(`Error: ${response.message}`, 'error');
+            }
+        }
+    );
+}
+
+/**
+ * Update the auto-delete UI based on status
+ */
+function updateAutoDeleteUI(isRunning, progress) {
+    if (isRunning) {
+        // Update button
+        autoDeleteToggleBtn.textContent = 'Stop';
+        autoDeleteToggleBtn.style.background = '#ff6b6b';
+        autoDeleteToggleBtn.style.color = 'white';
+
+        // Show progress
+        autoDeleteProgressDiv.style.display = 'block';
+        autoDeleteProgressDiv.innerHTML = `
+            Running... | Deleted: <strong>${progress.totalDeleted}</strong> entries | 
+            Batch #${progress.currentBatch} (${progress.lastBatchSize} in last batch)
+        `;
+
+        // Update status text
+        autoDeleteStatusDiv.textContent = 'Active - Processing in background';
+    } else {
+        // Update button
+        autoDeleteToggleBtn.textContent = 'Start';
+        autoDeleteToggleBtn.style.background = '';
+        autoDeleteToggleBtn.style.color = '';
+
+        // Show final stats if any
+        if (progress && progress.totalDeleted > 0) {
+            autoDeleteProgressDiv.style.display = 'block';
+            if (progress.isComplete) {
+                autoDeleteProgressDiv.innerHTML = `
+                    Complete! Deleted <strong>${progress.totalDeleted}</strong> entries total
+                `;
+            } else {
+                autoDeleteProgressDiv.innerHTML = `
+                    Paused - Deleted <strong>${progress.totalDeleted}</strong> entries so far
+                `;
+            }
+        } else {
+            autoDeleteProgressDiv.style.display = 'none';
+        }
+
+        // Update status text
+        autoDeleteStatusDiv.textContent = 'Deletes 250 entries every 10 seconds in the background';
+    }
+}
+
+/**
+ * Poll for auto-delete status updates
+ */
+let statusPollingInterval = null;
+
+function startStatusPolling() {
+    // Clear any existing interval
+    if (statusPollingInterval) {
+        clearInterval(statusPollingInterval);
+    }
+
+    // Poll every 2 seconds
+    statusPollingInterval = setInterval(() => {
+        // https://developer.chrome.com/docs/extensions/reference/api/runtime#method-sendMessage
+        chrome.runtime.sendMessage(
+            { action: 'getAutoDeleteStatus' },
+            (response) => {
+                if (response.success) {
+                    updateAutoDeleteUI(response.isRunning, response.progress);
+
+                    // If auto-delete completed, stop polling
+                    if (!response.isRunning) {
+                        stopStatusPolling();
+                    }
+                }
+            }
+        );
+    }, 2000); // 2 seconds
+}
+
+function stopStatusPolling() {
+    if (statusPollingInterval) {
+        clearInterval(statusPollingInterval);
+        statusPollingInterval = null;
+    }
+}
+
+/**
+ * Check auto-delete status on popup load
+ */
+function checkAutoDeleteStatus() {
+    // https://developer.chrome.com/docs/extensions/reference/api/runtime#method-sendMessage
+    chrome.runtime.sendMessage(
+        { action: 'getAutoDeleteStatus' },
+        (response) => {
+            if (response.success) {
+                updateAutoDeleteUI(response.isRunning, response.progress);
+
+                // If running, start polling
+                if (response.isRunning) {
+                    startStatusPolling();
+                }
+            }
+        }
+    );
+}
+
+// Auto-delete toggle button
+autoDeleteToggleBtn.addEventListener('click', toggleAutoDelete);
+
+// Check status when popup loads
+document.addEventListener('DOMContentLoaded', () => {
+    checkAutoDeleteStatus();
+});
+
 console.log('Popup.js loaded successfully!');
